@@ -1,0 +1,52 @@
+#!/bin/sh
+
+set -e
+
+ENV_NAME="acme-local"
+
+# Get the directory where this script is actually located (resolving symlinks)
+SCRIPT_PATH="$0"
+if [ -L "$SCRIPT_PATH" ]; then
+    SCRIPT_PATH="$(readlink "$SCRIPT_PATH")"
+fi
+SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
+
+# Check if a command was provided
+if [ $# -eq 0 ]; then
+    echo "Usage: acme-local {start|stop|delete|shell}"
+    exit 1
+fi
+
+COMMAND=$1
+
+case "$COMMAND" in
+    start)
+        "$SCRIPT_DIR/start.sh" "$ENV_NAME"
+        ;;
+    stop)
+        "$SCRIPT_DIR/stop.sh" "$ENV_NAME"
+        ;;
+    activate)
+        "$SCRIPT_DIR/activate.sh" "$ENV_NAME"
+        ;;
+    env)
+        # Output environment variables as export statements for sourcing
+        while IFS= read -r line || [ -n "$line" ]; do
+            # Skip empty lines and comments
+            if [ -n "$line" ] && [ "${line#\#}" = "$line" ]; then
+                echo "export $line"
+            fi
+        done < "$SCRIPT_DIR/local.env"
+        ;;
+    delete)
+        "$SCRIPT_DIR/delete.sh" "$ENV_NAME"
+        ;;
+    shell)
+        "$SCRIPT_DIR/shell.sh" "$ENV_NAME"
+        ;;
+    *)
+        echo "Error: Unknown command '$COMMAND'"
+        echo "Usage: acme-local {start|stop|delete|shell}"
+        exit 1
+        ;;
+esac
