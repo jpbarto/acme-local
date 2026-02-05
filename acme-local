@@ -13,13 +13,12 @@ SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
 
 # Check if a command was provided
 if [ $# -eq 0 ]; then
-    echo "Usage: acme-local {start [--argocd]|stop|delete|shell|env}"
+    echo "Usage: acme-local {start [--argocd]|stop|delete|env}"
     echo ""
     echo "Commands:"
     echo "  start [--argocd]  Start the local environment (optionally with ArgoCD)"
     echo "  stop              Stop the local environment"
     echo "  delete            Delete the local environment"
-    echo "  shell             Start a shell with environment variables configured"
     echo "  env               Output environment variables for sourcing"
     exit 1
 fi
@@ -49,12 +48,9 @@ case "$COMMAND" in
     delete)
         "$SCRIPT_DIR/delete.sh" "$ENV_NAME"
         ;;
-    shell)
-        "$SCRIPT_DIR/shell.sh" "$ENV_NAME"
-        ;;
     *)
         echo "Error: Unknown command '$COMMAND'"
-        echo "Usage: acme-local {start [--argocd]|stop|delete|shell|env}"
+        echo "Usage: acme-local {start [--argocd]|stop|delete|env}"
         exit 1
         ;;
 esac
