@@ -1,12 +1,13 @@
 # acme-local
 
-A local development environment tool that creates an isolated Kubernetes cluster with Istio service mesh and LocalStack for AWS service emulation. Perfect for developing and testing cloud-native applications locally.
+A local development environment tool that creates an isolated Kubernetes cluster with Istio service mesh, optional ArgoCD, and LocalStack for AWS service emulation. Perfect for developing and testing cloud-native applications locally.
 
 ## Overview
 
 `acme-local` automates the setup of a complete local development environment using:
 - **Colima** - Container runtime and Kubernetes cluster (k3s)
-- **Istio** - Service mesh for microservices
+- **Istio** - Service mesh for microservices with ingress gateway
+- **ArgoCD** (optional) - GitOps continuous delivery tool, accessible via Istio ingress
 - **LocalStack** - AWS cloud service emulator
 - **Custom CA certificates** - Support for corporate proxy/certificate authorities
 
@@ -91,6 +92,24 @@ This will:
 - Install Istio service mesh with ingress gateway
 - Start LocalStack for AWS service emulation
 
+#### Start with ArgoCD
+
+To also install ArgoCD for GitOps deployment:
+
+```bash
+acme-local start --argocd
+```
+
+When ArgoCD is installed, it will be:
+- Accessible via the Istio ingress gateway at `http://<EXTERNAL-IP>/argocd/`
+- Configured to work behind the Istio ingress with proper URL path handling
+- Pre-configured with admin credentials (displayed after installation)
+
+The startup script will display:
+- The ArgoCD URL
+- Admin username (admin)
+- Auto-generated password for initial login
+
 ### Stop the Environment
 
 Stop all running services and the Colima VM:
@@ -110,16 +129,6 @@ acme-local delete
 ```
 
 This deletes the Colima VM and all associated data.
-
-### Shell Access
-
-Start an interactive shell with environment variables pre-configured:
-
-```bash
-acme-local shell
-```
-
-This starts the environment, exports AWS variables for LocalStack, and opens a shell. The environment is stopped when you exit the shell.
 
 ### Export Environment Variables
 
@@ -152,8 +161,19 @@ To modify these settings, edit the `colima start` command in `start.sh`.
 ### Istio Service Mesh
 - Installed via Helm charts
 - Control plane (`istiod`) in `istio-system` namespace
-- Ingress gateway in `istio-ingress` namespace
+- Ingress gateway in `istio-ingress` namespace with LoadBalancer service
 - Default revision enabled
+- Exposes HTTP (port 80) and HTTPS (port 443) for external access
+
+### ArgoCD (Optional)
+- GitOps continuous delivery tool
+- Installed via Helm when using `--argocd` flag
+- Accessible through Istio ingress at `/argocd/` path
+- Configured with:
+  - Insecure mode for HTTP access behind ingress
+  - Proper base path and root path for URL generation
+  - Istio Gateway and VirtualService for routing
+- Default admin credentials generated during installation
 
 ### LocalStack
 - Emulates AWS services (S3, DynamoDB, Lambda, etc.)
@@ -177,6 +197,14 @@ kubectl get nodes
 ```bash
 kubectl get pods -n istio-system
 kubectl get pods -n istio-ingress
+kubectl get svc -n istio-ingress  # Get the EXTERNAL-IP
+```
+
+### Check ArgoCD (if installed)
+```bash
+kubectl get pods -n argocd
+kubectl get svc -n argocd
+kubectl get gateway,virtualservice -n argocd  # Check Istio routing
 ```
 
 ### Check LocalStack
