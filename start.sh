@@ -2,11 +2,20 @@
 
 set -e
 
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
 ENV_NAME="${1:-acme-local}"
 
-# Start a kubernetes cluster using k3s on Colima, configure it with the Visa Netskope CA certificate
+# Start a kubernetes cluster using k3s on Colima, configure it with CA certificates
 colima start --profile $ENV_NAME --kubernetes --k3s-arg='"--disable=traefik"' --cpu 4 --memory 8 --disk 20 --network-address --vm-type vz
-colima exec --profile $ENV_NAME sudo cp $HOME/caadmin.netskope.com.crt /usr/local/share/ca-certificates
+
+# Copy all certificate files from certs directory to the VM
+for cert in "$SCRIPT_DIR/certs"/*.crt "$SCRIPT_DIR/certs"/*.pem; do
+    if [ -f "$cert" ]; then
+        colima exec --profile $ENV_NAME sudo cp "$cert" /usr/local/share/ca-certificates/
+    fi
+done
 colima exec --profile $ENV_NAME sudo /usr/sbin/update-ca-certificates
 colima exec --profile $ENV_NAME sudo systemctl restart docker
 
