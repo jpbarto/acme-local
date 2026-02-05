@@ -13,15 +13,23 @@ SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
 
 # Check if a command was provided
 if [ $# -eq 0 ]; then
-    echo "Usage: acme-local {start|stop|delete|shell}"
+    echo "Usage: acme-local {start [--argocd]|stop|delete|shell|env}"
+    echo ""
+    echo "Commands:"
+    echo "  start [--argocd]  Start the local environment (optionally with ArgoCD)"
+    echo "  stop              Stop the local environment"
+    echo "  delete            Delete the local environment"
+    echo "  shell             Start a shell with environment variables configured"
+    echo "  env               Output environment variables for sourcing"
     exit 1
 fi
 
 COMMAND=$1
+shift
 
 case "$COMMAND" in
     start)
-        "$SCRIPT_DIR/start.sh" "$ENV_NAME"
+        "$SCRIPT_DIR/start.sh" "$ENV_NAME" "$@"
         ;;
     stop)
         "$SCRIPT_DIR/stop.sh" "$ENV_NAME"
@@ -46,7 +54,7 @@ case "$COMMAND" in
         ;;
     *)
         echo "Error: Unknown command '$COMMAND'"
-        echo "Usage: acme-local {start|stop|delete|shell}"
+        echo "Usage: acme-local {start [--argocd]|stop|delete|shell|env}"
         exit 1
         ;;
 esac
