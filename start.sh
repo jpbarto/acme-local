@@ -7,6 +7,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 ENV_NAME="${1:-acme-local}"
 INSTALL_ARGOCD=false
+CPU_COUNT=4
 
 # Parse optional flags
 shift
@@ -16,16 +17,20 @@ while [ $# -gt 0 ]; do
             INSTALL_ARGOCD=true
             shift
             ;;
+        --cpu)
+            CPU_COUNT="$2"
+            shift 2
+            ;;
         *)
             echo "Unknown option: $1"
-            echo "Usage: start.sh [env-name] [--argocd]"
+            echo "Usage: start.sh [env-name] [--argocd] [--cpu <count>]"
             exit 1
             ;;
     esac
 done
 
 # Start a kubernetes cluster using k3s on Colima, configure it with CA certificates
-colima start --profile $ENV_NAME --kubernetes --k3s-arg='"--disable=traefik"' --cpu 4 --memory 8 --disk 20 --network-address --vm-type vz
+colima start --profile $ENV_NAME --kubernetes --k3s-arg='"--disable=traefik"' --cpu $CPU_COUNT --memory 8 --disk 20 --network-address --vm-type vz
 
 # Copy all certificate files from certs directory to the VM
 for cert in "$SCRIPT_DIR/certs"/*.crt "$SCRIPT_DIR/certs"/*.pem; do

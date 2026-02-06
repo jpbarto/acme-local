@@ -92,12 +92,28 @@ This will:
 - Install Istio service mesh with ingress gateway
 - Start LocalStack for AWS service emulation
 
+#### Start with Custom CPU Count
+
+To customize the CPU allocation (default is 4 cores):
+
+```bash
+acme-local start --cpu 8
+```
+
 #### Start with ArgoCD
 
 To also install ArgoCD for GitOps deployment:
 
 ```bash
 acme-local start --argocd
+```
+
+#### Combine Options
+
+You can combine multiple options:
+
+```bash
+acme-local start --argocd --cpu 6
 ```
 
 When ArgoCD is installed, it will be:
@@ -143,13 +159,18 @@ This loads the variables from `local.env` into your current shell.
 ## Resource Configuration
 
 The default resource allocation is:
-- **CPU**: 4 cores
+- **CPU**: 4 cores (customizable with `--cpu` option)
 - **Memory**: 8 GB
 - **Disk**: 20 GB
 - **Network**: Enabled with address assignment
 - **VM Type**: Apple Virtualization Framework (VZ)
 
-To modify these settings, edit the `colima start` command in `start.sh`.
+To customize CPU allocation, use the `--cpu` option with the start command:
+```bash
+acme-local start --cpu 8
+```
+
+To modify other settings like memory or disk, edit the `colima start` command in `start.sh`.
 
 ## Components
 
