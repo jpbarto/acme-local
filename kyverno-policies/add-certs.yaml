@@ -1,0 +1,36 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: add-certificates-volume
+  annotations:
+    policies.kyverno.io/title: Add Certificates as a Volume
+    policies.kyverno.io/subject: Pod,Volume
+spec:
+  background: false
+  rules:
+    - name: add-ssl-certs
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+      preconditions:
+        all:
+          - key: "{{request.operation || 'BACKGROUND'}}"
+            operator: AnyIn
+            value:
+              - CREATE
+              - UPDATE
+      mutate:
+        patchStrategicMerge:
+          spec:
+            volumes:
+              - name: etc-ssl-certs
+                configMap:
+                  name: ca-pemstore
+            containers:
+              - (name): "*"
+                volumeMounts:
+                  - name: etc-ssl-certs
+                    mountPath: /etc/ssl/certs
+                    readOnly: true

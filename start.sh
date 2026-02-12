@@ -39,7 +39,14 @@ for cert in "$SCRIPT_DIR/certs"/*.crt "$SCRIPT_DIR/certs"/*.pem; do
     fi
 done
 colima exec --profile $ENV_NAME sudo /usr/sbin/update-ca-certificates
+colima exec --profile $ENV_NAME "kubectl -n default create configmap ca-pemstore --from-file=/etc/ssl/certs/ca-certificates.crt"
 colima exec --profile $ENV_NAME sudo systemctl restart docker
+
+# Install Kyverno using helm
+helm repo add kyverno https://kyverno.github.io/kyverno/ 
+helm repo update
+helm install kyverno kyverno/kyverno --namespace kyverno --create-namespace --wait
+kubectl apply -f "$SCRIPT_DIR/kyverno-policies" -n kyverno
 
 # Install Istio using Helm
 helm repo add istio https://istio-release.storage.googleapis.com/charts
