@@ -42,7 +42,7 @@ colima exec --profile $ENV_NAME sudo /usr/sbin/update-ca-certificates
 colima exec --profile $ENV_NAME "kubectl -n default create configmap ca-pemstore --from-file=/etc/ssl/certs/ca-certificates.crt"
 colima exec --profile $ENV_NAME sudo systemctl restart docker
 
-# Install Kyverno using helm
+# Install Kyverno using helm, it will insert CA certificates into newly created namespaces and inject them into pods as an attached volume
 helm repo add kyverno https://kyverno.github.io/kyverno/ 
 helm repo update
 helm install kyverno kyverno/kyverno --namespace kyverno --create-namespace --wait
@@ -66,59 +66,19 @@ if [ "$INSTALL_ARGOCD" = true ]; then
     helm repo update
     
     # Install ArgoCD using Helm with insecure mode for non-HTTPS access
-    # Configure base path for proper URL generation behind Istio ingress
+    # Use NodePort to avoid port conflicts with Istio ingress (which uses ports 80/443)
     helm upgrade --install argocd argo/argo-cd \
         --namespace argocd \
         --create-namespace \
         --set server.insecure=true \
-        --set 'server.extraArgs={--basehref=/argocd,--rootpath=/argocd,--insecure}' \
+        --set server.service.type=NodePort \
+        --set server.service.nodePortHttp=30080 \
         --wait \
         --timeout 10m
     
-    # Configure Istio Gateway and VirtualService for ArgoCD
-    echo "Configuring Istio ingress for ArgoCD..."
-    
-    cat <<EOF | kubectl apply -f -
-apiVersion: networking.istio.io/v1beta1
-kind: Gateway
-metadata:
-  name: argocd-gateway
-  namespace: argocd
-spec:
-  selector:
-    app: istio-ingress
-    istio: ingress
-  servers:
-  - port:
-      number: 80
-      name: http
-      protocol: HTTP
-    hosts:
-    - "*"
----
-apiVersion: networking.istio.io/v1beta1
-kind: VirtualService
-metadata:
-  name: argocd-virtualservice
-  namespace: argocd
-spec:
-  hosts:
-  - "*"
-  gateways:
-  - argocd-gateway
-  http:
-  - match:
-    - uri:
-        prefix: /argocd
-    route:
-    - destination:
-        host: argocd-server.argocd.svc.cluster.local
-        port:
-          number: 80
-EOF
-    
-    # Get the ingress IP
-    INGRESS_IP=$(kubectl get svc istio-ingress -n istio-ingress -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+    # Get the Colima VM IP (ArgoCD is accessible via NodePort)
+    ARGOCD_IP=$(kubectl get nodes -o jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].address}' | awk '{print $1}')
+    ARGOCD_PORT=$(kubectl get svc argocd-server -n argocd -o jsonpath='{.spec.ports[?(@.name=="http")].nodePort}')
     
     # Wait for the secret to be created and get the password
     echo "Waiting for ArgoCD initial admin secret..."
@@ -134,11 +94,16 @@ EOF
     echo "ArgoCD installed successfully!"
     echo ""
     echo "Access ArgoCD UI at:"
-    echo "  http://${INGRESS_IP}/argocd"
+    echo "  http://${ARGOCD_IP}:${ARGOCD_PORT}/"
     echo ""
     echo "Login credentials:"
     echo "  Username: admin"
     echo "  Password: ${ARGOCD_PASSWORD}"
+    echo ""
+    echo "To use ArgoCD CLI:"
+    echo "  1. Install ArgoCD CLI: brew install argocd"
+    echo "  2. Login to ArgoCD:"
+    echo "     argocd login ${ARGOCD_IP}:${ARGOCD_PORT} --username admin --password ${ARGOCD_PASSWORD} --insecure"
     echo ""
 fi
 

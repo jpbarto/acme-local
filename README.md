@@ -117,14 +117,16 @@ acme-local start --argocd --cpu 6
 ```
 
 When ArgoCD is installed, it will be:
-- Accessible via the Istio ingress gateway at `http://<EXTERNAL-IP>/argocd/`
-- Configured to work behind the Istio ingress with proper URL path handling
+- Accessible directly via NodePort at `http://<NODE-IP>:<PORT>/`
+- Exposed independently from Istio ingress (no port conflicts)
+- Fully compatible with ArgoCD CLI
 - Pre-configured with admin credentials (displayed after installation)
 
 The startup script will display:
-- The ArgoCD URL
+- The ArgoCD URL with IP and port
 - Admin username (admin)
 - Auto-generated password for initial login
+- ArgoCD CLI login command for easy access
 
 ### Stop the Environment
 
@@ -189,12 +191,14 @@ To modify other settings like memory or disk, edit the `colima start` command in
 ### ArgoCD (Optional)
 - GitOps continuous delivery tool
 - Installed via Helm when using `--argocd` flag
-- Accessible through Istio ingress at `/argocd/` path
+- Exposed via NodePort service (default port 30080) for direct access
+- Runs independently alongside Istio ingress without port conflicts
 - Configured with:
-  - Insecure mode for HTTP access behind ingress
-  - Proper base path and root path for URL generation
-  - Istio Gateway and VirtualService for routing
+  - Insecure mode for HTTP access
+  - Full ArgoCD CLI compatibility
+  - Direct access without sub-path routing
 - Default admin credentials generated during installation
+- Accessible at `http://<node-ip>:30080/`
 
 ### LocalStack
 - Emulates AWS services (S3, DynamoDB, Lambda, etc.)
@@ -224,8 +228,8 @@ kubectl get svc -n istio-ingress  # Get the EXTERNAL-IP
 ### Check ArgoCD (if installed)
 ```bash
 kubectl get pods -n argocd
-kubectl get svc -n argocd
-kubectl get gateway,virtualservice -n argocd  # Check Istio routing
+kubectl get svc -n argocd  # Check NodePort and assigned port
+argocd app list  # List applications (requires CLI login first)
 ```
 
 ### Check LocalStack
