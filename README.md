@@ -77,6 +77,14 @@ You can source these variables in your shell or use `acme-local env` to export t
 
 ## Usage
 
+`acme-local` provides the following commands:
+
+- `start [--argocd] [--cpu <count>]` - Start the local environment
+- `stop` - Stop the local environment
+- `status` - Check the status of all components
+- `delete` - Delete the local environment completely
+- `env` - Output environment variables for sourcing
+
 ### Start the Environment
 
 Start the local Kubernetes cluster with Istio and LocalStack:
@@ -137,6 +145,44 @@ acme-local stop
 ```
 
 This preserves the VM and its state for later use.
+
+### Check Environment Status
+
+Check the status of all components in the environment:
+
+```bash
+acme-local status
+```
+
+This command provides a comprehensive overview of your environment:
+- **Colima VM** - Running/stopped status
+- **Kubernetes cluster** - Accessibility and node IP
+- **Istio service mesh** - Control plane (istiod) and ingress gateway status with external IP
+- **ArgoCD** - Deployment status, access URL, and credentials (if installed)
+- **LocalStack** - Running status and endpoint information
+
+The status command is optimized for efficiency - if Colima is not running, it will skip unnecessary checks since all containerized components depend on the Colima VM.
+
+Example output when running:
+```
+=== Kubernetes Cluster (Colima) ===
+✓ Colima VM: Running
+✓ Kubernetes: Running
+  Node IP: 192.168.64.8
+
+=== Istio Service Mesh ===
+✓ Istiod (control plane): Running
+✓ Istio ingress gateway: Running
+  Ingress IP: 192.168.64.8
+
+=== ArgoCD ===
+✓ ArgoCD server: Running
+  Access URL: http://192.168.64.8:30080/
+
+=== LocalStack ===
+✓ LocalStack: Running
+  Endpoint: http://localhost:4566
+```
 
 ### Delete the Environment
 
