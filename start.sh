@@ -45,7 +45,7 @@ colima exec --profile $ENV_NAME sudo systemctl restart docker
 # Install Kyverno using helm, it will insert CA certificates into newly created namespaces and inject them into pods as an attached volume
 helm repo add kyverno https://kyverno.github.io/kyverno/ 
 helm repo update
-helm install kyverno kyverno/kyverno --namespace kyverno --create-namespace --wait
+helm upgrade --install kyverno kyverno/kyverno --namespace kyverno --create-namespace --wait
 kubectl apply -f "$SCRIPT_DIR/kyverno-policies" -n kyverno
 
 # Install Istio using Helm
