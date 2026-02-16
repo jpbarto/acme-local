@@ -39,7 +39,7 @@ for cert in "$SCRIPT_DIR/certs"/*.crt "$SCRIPT_DIR/certs"/*.pem; do
     fi
 done
 colima exec --profile $ENV_NAME sudo /usr/sbin/update-ca-certificates
-colima exec --profile $ENV_NAME "kubectl -n default create configmap ca-pemstore --from-file=/etc/ssl/certs/ca-certificates.crt"
+colima exec --profile $ENV_NAME "kubectl -n default get configmap ca-pemstore 2>/dev/null || kubectl -n default create configmap ca-pemstore --from-file=/etc/ssl/certs/ca-certificates.crt"
 colima exec --profile $ENV_NAME sudo systemctl restart docker
 
 # Install Kyverno using helm, it will insert CA certificates into newly created namespaces and inject them into pods as an attached volume
