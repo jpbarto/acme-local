@@ -96,10 +96,11 @@ if kubectl get namespace argocd > /dev/null 2>&1; then
         echo "✓ ArgoCD server: Running"
         ARGOCD_IP=$(kubectl get nodes -o jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].address}' 2>/dev/null | awk '{print $1}')
         ARGOCD_PORT=$(kubectl get svc argocd-server -n argocd -o jsonpath='{.spec.ports[?(@.name=="http")].nodePort}' 2>/dev/null)
+        ARGOCD_PASS=$(kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' | base64 -d)
         if [ -n "$ARGOCD_IP" ] && [ -n "$ARGOCD_PORT" ]; then
             echo "  Access URL: http://$ARGOCD_IP:$ARGOCD_PORT/"
             echo "  Username: admin"
-            echo "  Password: Run 'kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath=\"{.data.password}\" | base64 -d'"
+            echo "  Password: $ARGOCD_PASS"
         fi
     else
         echo "✗ ArgoCD server: $ARGOCD_STATUS"
