@@ -1,0 +1,40 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: sync-ca-pemstore
+  annotations:
+    policies.kyverno.io/title: Sync ConfigMaps to All Namespaces
+    policies.kyverno.io/subject: ConfigMap,Namespace
+spec:
+  background: true
+  rules:
+    - name: sync-ca-pemstore-to-new-namespaces
+      match:
+        any:
+          - resources:
+              kinds:
+                - Namespace
+      generate:
+        apiVersion: v1
+        kind: ConfigMap
+        name: ca-pemstore
+        namespace: "{{request.object.metadata.name}}"
+        synchronize: true
+        clone:
+          namespace: default
+          name: ca-pemstore
+    - name: sync-localstack-config-to-new-namespaces
+      match:
+        any:
+          - resources:
+              kinds:
+                - Namespace
+      generate:
+        apiVersion: v1
+        kind: ConfigMap
+        name: localstack-config
+        namespace: "{{request.object.metadata.name}}"
+        synchronize: true
+        clone:
+          namespace: default
+          name: localstack-config
