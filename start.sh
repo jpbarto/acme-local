@@ -46,6 +46,15 @@ colima exec --profile $ENV_NAME sudo systemctl restart docker
 helm repo add kyverno https://kyverno.github.io/kyverno/ 
 helm repo update
 helm upgrade --install kyverno kyverno/kyverno --namespace kyverno --create-namespace --wait
+
+# Create a ConfigMap with the LocalStack endpoint URL so Kyverno can inject it into pods
+COLIMA_IP=$(colima status --profile $ENV_NAME 2>&1 | grep 'address:' | grep -oE '[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+')
+sed -i '' "s|^AWS_ENDPOINT_URL=.*|AWS_ENDPOINT_URL='http://${COLIMA_IP}:4566'|" "$SCRIPT_DIR/local.env"
+kubectl create configmap localstack-config \
+    --from-literal=AWS_ENDPOINT_URL="http://${COLIMA_IP}:4566" \
+    --namespace default \
+    --dry-run=client -o yaml | kubectl apply -f -
+
 kubectl apply -f "$SCRIPT_DIR/kyverno-policies" -n kyverno
 
 # Install Istio using Helm
@@ -108,4 +117,4 @@ if [ "$INSTALL_ARGOCD" = true ]; then
 fi
 
 # Start LocalStack in detached mode to simulate AWS services
-localstack start -d
+localstack start --network host -d
