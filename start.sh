@@ -91,14 +91,14 @@ colima exec --profile $ENV_NAME -- sudo systemctl restart docker
 # Wait for Docker to restart
 sleep 5
 
-# Start local OCI registry using distribution/distribution container
+# Start local OCI registry using registry container
 echo "Starting local OCI registry..."
 colima exec --profile $ENV_NAME -- docker run -d \
     --name registry \
     --restart=always \
     --network host \
     -e REGISTRY_STORAGE_DELETE_ENABLED=true \
-    distribution/distribution:latest
+    registry:latest
 
 echo "Local OCI registry started at ${COLIMA_IP}:5000"
 
