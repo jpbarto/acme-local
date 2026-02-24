@@ -9,7 +9,7 @@ A local development environment tool that creates an isolated Kubernetes cluster
 - **Istio** - Service mesh for microservices with ingress gateway
 - **ArgoCD** (optional) - GitOps continuous delivery tool
 - **LocalStack** - AWS cloud service emulator
-- **OCI Registry** - Local container image registry (distribution/distribution)
+- **OCI Registry** - Local container image registry (registry)
 - **Custom CA certificates** - Support for corporate proxy/certificate authorities
 
 ## Prerequisites
@@ -253,7 +253,7 @@ To modify other settings like memory or disk, edit the `colima start` command in
 - Accessible at `http://<node-ip>:30080/`
 
 ### OCI Registry
-- Local container image registry using distribution/distribution
+- Local container image registry using the registry container
 - Runs on the host network inside Colima VM
 - Accessible at `<node-ip>:5000`
 - Docker daemon configured to allow insecure registry communication
