@@ -1,6 +1,12 @@
 #!/bin/sh
 
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ENV_NAME="${1:-acme-local}"
+
+# Load environment variables (includes AWS_ENDPOINT_URL set by start.sh)
+if [ -f "$SCRIPT_DIR/local.env" ]; then
+    . "$SCRIPT_DIR/local.env"
+fi
 
 echo "Checking acme-local environment status..."
 echo ""
@@ -116,7 +122,7 @@ if command -v localstack > /dev/null 2>&1; then
     LOCALSTACK_STATUS=$(localstack status 2>&1)
     if echo "$LOCALSTACK_STATUS" | grep -q "running"; then
         echo "✓ LocalStack: Running"
-        echo "  Endpoint: http://localhost:4566"
+        echo "  Endpoint: ${AWS_ENDPOINT_URL:-http://localhost:4566}"
     else
         echo "✗ LocalStack: Not running"
     fi
