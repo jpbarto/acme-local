@@ -116,6 +116,21 @@ else
 fi
 echo ""
 
+# Check OCI Registry status
+echo "=== OCI Registry ==="
+REGISTRY_STATUS=$(colima exec --profile "$ENV_NAME" -- docker ps --filter "name=registry" --format "{{.Status}}" 2>/dev/null || echo "")
+if [ -n "$REGISTRY_STATUS" ] && echo "$REGISTRY_STATUS" | grep -q "Up"; then
+    echo "✓ OCI Registry: Running"
+    NODE_IP=$(kubectl get nodes -o jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].address}' 2>/dev/null | awk '{print $1}')
+    if [ -n "$NODE_IP" ]; then
+        echo "  Endpoint: ${NODE_IP}:5000"
+        echo "  Example: docker tag myimage:latest ${NODE_IP}:5000/myimage:latest"
+    fi
+else
+    echo "✗ OCI Registry: Not running"
+fi
+echo ""
+
 # Check LocalStack status
 echo "=== LocalStack ==="
 if command -v localstack > /dev/null 2>&1; then

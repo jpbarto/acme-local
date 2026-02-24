@@ -1,14 +1,15 @@
 # acme-local
 
-A local development environment tool that creates an isolated Kubernetes cluster with Istio service mesh, optional ArgoCD, and LocalStack for AWS service emulation. Perfect for developing and testing cloud-native applications locally.
+A local development environment tool that creates an isolated Kubernetes cluster with Istio service mesh, optional ArgoCD, LocalStack for AWS service emulation, and a local OCI registry. Perfect for developing and testing cloud-native applications locally.
 
 ## Overview
 
 `acme-local` automates the setup of a complete local development environment using:
 - **Colima** - Container runtime and Kubernetes cluster (k3s)
 - **Istio** - Service mesh for microservices with ingress gateway
-- **ArgoCD** (optional) - GitOps continuous delivery tool, accessible via Istio ingress
+- **ArgoCD** (optional) - GitOps continuous delivery tool
 - **LocalStack** - AWS cloud service emulator
+- **OCI Registry** - Local container image registry (distribution/distribution)
 - **Custom CA certificates** - Support for corporate proxy/certificate authorities
 
 ## Prerequisites
@@ -159,6 +160,7 @@ This command provides a comprehensive overview of your environment:
 - **Kubernetes cluster** - Accessibility and node IP
 - **Istio service mesh** - Control plane (istiod) and ingress gateway status with external IP
 - **ArgoCD** - Deployment status, access URL, and credentials (if installed)
+- **OCI Registry** - Running status and endpoint for local container images
 - **LocalStack** - Running status and endpoint information
 
 The status command is optimized for efficiency - if Colima is not running, it will skip unnecessary checks since all containerized components depend on the Colima VM.
@@ -178,6 +180,10 @@ Example output when running:
 === ArgoCD ===
 ✓ ArgoCD server: Running
   Access URL: http://192.168.64.8:30080/
+
+=== OCI Registry ===
+✓ OCI Registry: Running
+  Endpoint: 192.168.64.8:5000
 
 === LocalStack ===
 ✓ LocalStack: Running
@@ -245,6 +251,22 @@ To modify other settings like memory or disk, edit the `colima start` command in
   - Direct access without sub-path routing
 - Default admin credentials generated during installation
 - Accessible at `http://<node-ip>:30080/`
+
+### OCI Registry
+- Local container image registry using distribution/distribution
+- Runs on the host network inside Colima VM
+- Accessible at `<node-ip>:5000`
+- Docker daemon configured to allow insecure registry communication
+- Enables local development and testing of container images without external registry
+- Usage example:
+  ```bash
+  # Tag and push an image
+  docker tag myimage:latest 192.168.64.8:5000/myimage:latest
+  docker push 192.168.64.8:5000/myimage:latest
+  
+  # Pull from the local registry
+  docker pull 192.168.64.8:5000/myimage:latest
+  ```
 
 ### LocalStack
 - Emulates AWS services (S3, DynamoDB, Lambda, etc.)
