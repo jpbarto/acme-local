@@ -114,7 +114,7 @@ kubectl create configmap localstack-config \
     --namespace default \
     --dry-run=client -o yaml | kubectl apply -f -
 
-kubectl apply -f "$SCRIPT_DIR/kyverno-policies" -n kyverno
+kubectl apply --server-side --force-conflicts -f "$SCRIPT_DIR/kyverno-policies"
 
 # Install Istio using Helm
 helm repo add istio https://istio-release.storage.googleapis.com/charts
